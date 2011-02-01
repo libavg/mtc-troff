@@ -1,0 +1,3 @@
+recursive-include troff/media *
+recursive-include troff/data *
+recursive-include troff/fonts *

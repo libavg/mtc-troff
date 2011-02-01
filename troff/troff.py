@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# TROff - Multitouch TRON clone
-
+#
+# TROff - A Multitouch TRON Clone
+#
 # Copyright (C) 2011 Thomas Schott, <scotty at c-base dot org>
 #
 # TROff is free software: You can redistribute it and/or
@@ -594,8 +594,6 @@ class BgAnim(avg.DivNode):
 
 
 class TROff(AVGApp):
-    multitouch = True
-
     def init(self):
         self._parentNode.mediadir = getMediaDir(__file__)
         avg.WordsNode.addFontDir(getMediaDir(__file__, 'fonts'))
