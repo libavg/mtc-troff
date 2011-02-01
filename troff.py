@@ -31,7 +31,7 @@ IDLE_TIMEOUT = 10000
 PLAYER_COLORS = ['00FF00', 'FF00FF', '00FFFF', 'FFFF00']
 
 g_player = avg.Player.get()
-g_exitButtons = True
+g_ownStarter = False
 g_gridSize = 4
 
 
@@ -42,29 +42,29 @@ g_gridSize = 4
 class Button(object):
     def __init__(self, parent, color, icon, callback):
         w, h = parent.size
-        if icon == '^':
+        if icon == '^': # 'clear player wins' button
             self.__node = avg.PolygonNode(pos=[(w, h), (0, h), (0, 0)])
-        elif icon == '<':
+        elif icon == '<': # 'turn left' button
             self.__node = avg.PolygonNode(pos=[(g_gridSize, 0), (w, 0), (w, h - g_gridSize)])
-        elif icon == '>':
+        elif icon == '>': # 'turn right' button
             self.__node = avg.PolygonNode(pos=[(w - g_gridSize, h), (0, h), (0, g_gridSize)])
-        elif icon == '#':
+        elif icon == '#': # 'clear all player wins' button
             # WinCounter size + some offset
             size = Point2D(g_gridSize * 44, g_gridSize * 44)
             self.__node = avg.RectNode(pos=parent.size / 2 - size, size=size * 2)
-        elif icon[0] == 'x':
-            size = Point2D(g_gridSize * 22, g_gridSize * 22)
-            if icon[1] == 'l':
-                posOffset = -Point2D(g_gridSize * 88, 0)
-            else:
-                posOffset = Point2D(g_gridSize * 88, 0)
-            self.__node = avg.RectNode(pos=parent.size / 2 - size + posOffset,
-                    size=size * 2, angle=pi / 4.0)
+        elif icon[0] == 'x': # 'exit' button, icon[1] == 'l'|'r' -> left|right
+            scale = g_gridSize * 6
+            xOffset = parent.width / 4 * (3 if icon[1] == 'r' else 1)
+            yOffset = parent.height / 2
+            pos = map(lambda (x, y): (x * scale + xOffset, y * scale + yOffset),
+                    [(-2, -1), (-1, -2), (0, -1), (1, -2), (2, -1), (1, 0),
+                     (2, 1), (1, 2), (0, 1), (-1, 2), (-2, 1), (-1, 0)])
+            self.__node = avg.PolygonNode(pos=pos)
         else:
-            if icon == 'O':
+            if icon == 'O': # 'start' button
                 self.__node = avg.CircleNode(pos=parent.size / 2, r=h / 4,
                         strokewidth=2)
-            else:
+            else: # icon == 'o': 'join' button 
                 self.__node = avg.CircleNode(pos=parent.size / 2, r=h / 2)
         self.__node.color = color
         self.__node.opacity = 0
@@ -671,9 +671,9 @@ class TROff(AVGApp):
                 pos=self.__ctrlDiv.size / 2, r=self.__ctrlDiv.size.y / 4,
                 opacity=0, sensitive=False)
 
-        if g_exitButtons:
-            Button(self.__winsDiv, 'FF0000', 'xl', self.leave).activate()
-            Button(self.__winsDiv, 'FF0000', 'xr', self.leave).activate()
+        exitCallback = g_player.get().stop if g_ownStarter else self.leave
+        Button(self.__winsDiv, 'FF0000', 'xl', exitCallback).activate()
+        Button(self.__winsDiv, 'FF0000', 'xr', exitCallback).activate()
 
         self.__redSound = avg.SoundNode(parent=battleground, href='red.wav')
         self.__yellowSound = avg.SoundNode(parent=battleground, href='yellow.wav')
@@ -848,5 +848,5 @@ class TROff(AVGApp):
 
 
 if __name__ == '__main__':
-    g_exitButtons = False
+    g_ownStarter = True
     TROff.start(resolution = (1280, 720))
