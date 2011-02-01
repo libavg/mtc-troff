@@ -1,0 +1,37 @@
+(lp1
+(dp2
+S'text'
+p3
+S'TROff - A Multitouch TRON<sup><small>(tm)</small></sup> Clone'
+p4
+sS'colorIdx'
+p5
+I3
+sS'size'
+p6
+F14
+sa(dp7
+g3
+S'author: Thomas Schott &lt;scotty@c-base.org&gt;'
+p8
+sg5
+I2
+sg6
+F10
+sa(dp9
+g3
+S'based on libavg &lt;www.libavg.de&gt;'
+p10
+sg5
+I1
+sg6
+F8
+sa(dp11
+g3
+S'originally written for the MultiTouchConsole<br/>at the c-base Berlin &lt;www.c-base.org&gt;'
+p12
+sg5
+I0
+sg6
+F8
+sa.

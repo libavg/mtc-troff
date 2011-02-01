@@ -20,7 +20,7 @@
 
 from libavg import avg, AVGApp, Point2D
 from libavg.AVGAppUtil import getMediaDir
-from math import floor, pi
+from math import floor, ceil, pi
 from random import choice, randint
 from cPickle import load
 
@@ -368,6 +368,7 @@ class IdlePlayer(Player):
         startPos = Point2D(demoData['startPos']) * g_gridSize
         super(IdlePlayer, self).__init__(color, startPos, (0, -g_gridSize),
                 *args, **kwargs)
+
         self.__route = demoData['route']
 
     def setReady(self):
@@ -400,6 +401,41 @@ class IdlePlayer(Player):
                 self.setDead(True)
                 return
         super(IdlePlayer, self)._step()
+
+
+class AboutPlayer(avg.DivNode):
+    def __init__(self, aboutData, *args, **kwargs):
+        kwargs['sensitive'] = False
+        super(AboutPlayer, self).__init__(*args, **kwargs)
+
+        color = PLAYER_COLORS[aboutData['colorIdx']]
+        scale = aboutData['size'] * g_gridSize
+
+        self.__textNode = avg.WordsNode(parent=self, text=aboutData['text'], color=color,
+                font='Millennium', fontsize=scale, alignment='center', opacity=0)
+        self.size = self.__textNode.size + Point2D(4, 1) * g_gridSize
+        self.size = (ceil(self.width / g_gridSize) * g_gridSize,
+                ceil(self.height / g_gridSize) * g_gridSize)
+        self.__textNode.pos = (0, (self.height - self.__textNode.height) / 2)
+
+        aboutData['startPos'] = Point2D(-self.width / 2, self.height) / g_gridSize
+        aboutData['route'] = [
+                (int(self.height / g_gridSize), -1),
+                (int(self.width / g_gridSize), -1),
+                (int(self.height / g_gridSize), -1),
+                (int(self.width / g_gridSize), 0)]
+        self.__idlePlayer = IdlePlayer(aboutData, parent=self)
+
+    def setReady(self):
+        avg.fadeIn(self.__textNode, 200)
+        self.__idlePlayer.setReady()
+
+    def setDead(self, restart=False):
+        self.__idlePlayer.setDead()
+        avg.fadeOut(self.__textNode, 200)
+
+    def step(self):
+        self.__idlePlayer.step()
 
 
 class DragItem(avg.DivNode):
@@ -479,6 +515,7 @@ class Shield(DragItem):
     def __init__(self, *args, **kwargs):
         icon = avg.CircleNode(r=g_gridSize * 2)
         super(Shield, self).__init__(icon, *args, **kwargs)
+
         icon.pos = self._posOffset
 
     def jump(self):
@@ -507,6 +544,7 @@ class Blocker(DragItem):
         icon = avg.RectNode(size=(g_gridSize * 3, g_gridSize * 3),
                 color='FF0000', fillcolor='FF0000')
         super(Blocker, self).__init__(icon, *args, **kwargs)
+
         icon.pos = self._posOffset - icon.size / 2
 
 
@@ -560,6 +598,7 @@ class TROff(AVGApp):
 
     def init(self):
         self._parentNode.mediadir = getMediaDir(__file__)
+        avg.WordsNode.addFontDir(getMediaDir(__file__, 'fonts'))
 
         global g_gridSize
         screenSize = g_player.getRootNode().size
@@ -745,21 +784,27 @@ class TROff(AVGApp):
                 p.checkShield(self.__shield)
 
     def __initIdleDemo(self, parent):
+        self.__idleTimeoutID = None
+        self.__idlePlayers = []
+
         fp = open(getMediaDir(__file__, 'data/idledemo.pickle'), 'r')
         demoData = load(fp)
         fp.close()
-
-        idleDiv1 = avg.DivNode(parent=parent,
-                pos=parent.size / 2 - Point2D(0, g_gridSize * 4))
-        idleDiv2 = avg.DivNode(parent=parent,
-                pos=parent.size / 2 + Point2D(0, g_gridSize * 4),
-                pivot=(0, 0), angle=pi)
-        self.__idlePlayers = []
+        demoDiv = avg.DivNode(parent=parent,
+                pos=parent.size / 2 - Point2D(0, g_gridSize * 20))
         for data in demoData:
-            self.__idlePlayers.append(IdlePlayer(data, parent=idleDiv1))
-            self.__idlePlayers.append(IdlePlayer(data, parent=idleDiv2))
+            self.__idlePlayers.append(IdlePlayer(data, parent=demoDiv))
 
-        self.__idleTimeoutID = None
+        fp = open(getMediaDir(__file__, 'data/idleabout.pickle'), 'r')
+        aboutData = load(fp)
+        fp.close()
+        aboutDiv = avg.DivNode(parent=parent,
+                pos=parent.size / 2 - Point2D(0, g_gridSize * 10))
+        pos = Point2D(0, 0)
+        for data in aboutData:
+            aboutPlayer = AboutPlayer(data, parent=aboutDiv, pos=pos)
+            pos.y += aboutPlayer.height + 4 * g_gridSize
+            self.__idlePlayers.append(aboutPlayer)
 
     def __activateIdleTimer(self):
         assert self.__idleTimeoutID is None
