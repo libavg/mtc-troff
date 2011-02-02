@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
-from libavg import avg, AVGApp, Point2D
+from libavg import avg, gameapp, Point2D
 from libavg.AVGAppUtil import getMediaDir
 from math import floor, ceil, pi
 from random import choice, randint
@@ -31,7 +31,6 @@ IDLE_TIMEOUT = 10000
 PLAYER_COLORS = ['00FF00', 'FF00FF', '00FFFF', 'FFFF00']
 
 g_player = avg.Player.get()
-g_ownStarter = False
 g_gridSize = 4
 
 
@@ -593,11 +592,8 @@ class BgAnim(avg.DivNode):
             self.pos += self.__heading
 
 
-class TROff(AVGApp):
+class TROff(gameapp.GameApp):
     def init(self):
-        self._parentNode.mediadir = getMediaDir(__file__)
-        avg.WordsNode.addFontDir(getMediaDir(__file__, 'fonts'))
-
         global g_gridSize
         screenSize = g_player.getRootNode().size
         g_gridSize = int(min(floor(screenSize.x / BASE_GRIDSIZE.x),
@@ -669,7 +665,7 @@ class TROff(AVGApp):
                 pos=self.__ctrlDiv.size / 2, r=self.__ctrlDiv.size.y / 4,
                 opacity=0, sensitive=False)
 
-        exitCallback = g_player.get().stop if g_ownStarter else self.leave
+        exitCallback = g_player.get().stop if gameapp.ownStarter else self.leave
         Button(self.__winsDiv, 'FF0000', 'xl', exitCallback).activate()
         Button(self.__winsDiv, 'FF0000', 'xr', exitCallback).activate()
 
@@ -687,6 +683,9 @@ class TROff(AVGApp):
             self.__winsDiv.sensitive = False
         elif len(self.__activePlayers) == 2:
             self.__startButton.activate()
+
+    def _getPackagePath(self):
+        return __file__
 
     def _enter(self):
         self.__startSound.play()
@@ -846,5 +845,4 @@ class TROff(AVGApp):
 
 
 if __name__ == '__main__':
-    g_ownStarter = True
-    TROff.start(resolution = (1280, 720))
+    TROff.start()

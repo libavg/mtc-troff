@@ -20,26 +20,15 @@
 
 from os import path
 from libavg.AVGAppUtil import getMediaDir, createImagePreviewNode
-from . import troff
+from troff import TROff
 
 __all__ = [ 'apps', 'TROff']
-
-class TROff(troff.TROff):
-    multitouch = True
-
-    @classmethod
-    def start(cls, *args, **kwargs):
-        if not 'resolution' in kwargs:
-            kwargs['resolution'] = (1280, 720)
-        troff.g_ownStarter = True
-        super(TROff, cls).start(*args, **kwargs)
-
 
 def createPreviewNode(maxSize):
     filename = path.join(getMediaDir(__file__), 'preview.png')
     return createImagePreviewNode(maxSize, absHref = filename)
 
 apps = (
-        {'class': troff.TROff,
+        {'class': TROff,
             'createPreviewNode': createPreviewNode},
         )
