@@ -21,15 +21,15 @@
 import sys
 
 try:
-    import troff
+    import mttroff
 except ImportError:
     sys.path = ['..', '/usr/share/games'] + sys.path
 
     try:
-        import troff
+        import mttroff
     except ImportError:
-        sys.stderr.write('ERROR: Cannot find troff package: reinstall the game.\n')
+        sys.stderr.write('ERROR: Cannot find mttroff package: reinstall the game.\n')
         sys.exit(1)
 
 if __name__ == '__main__':
-    troff.TROff.start()
+    mttroff.TROff.start()

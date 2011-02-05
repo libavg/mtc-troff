@@ -9,9 +9,9 @@ setup(
     author='Thomas Schott',
     author_email='<scotty at c-base dot org>',
     license='GPL3',
-    packages=['troff'],
-    scripts=['scripts/troff'],
+    packages=['mttroff'],
+    scripts=['scripts/mttroff'],
     package_data={
-            'troff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Millennium.ttf']
+            'mttroff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Millennium.ttf']
     }
 )
