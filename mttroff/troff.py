@@ -665,7 +665,7 @@ class TROff(gameapp.GameApp):
                 pos=self.__ctrlDiv.size / 2, r=self.__ctrlDiv.size.y / 4,
                 opacity=0, sensitive=False)
 
-        exitCallback = g_player.get().stop if gameapp.ownStarter else self.leave
+        exitCallback = self.quit
         Button(self.__winsDiv, 'FF0000', 'xl', exitCallback).activate()
         Button(self.__winsDiv, 'FF0000', 'xr', exitCallback).activate()
 
