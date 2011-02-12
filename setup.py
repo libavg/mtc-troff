@@ -8,6 +8,7 @@ setup(
     version='1.0',
     author='Thomas Schott',
     author_email='<scotty at c-base dot org>',
+    url='https://www.libavg.de/',
     license='GPL3',
     packages=['mttroff'],
     scripts=['scripts/mttroff'],
