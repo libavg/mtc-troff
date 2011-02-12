@@ -692,7 +692,7 @@ class TROff(gameapp.GameApp):
         self.__ctrlDiv.sensitive = True
         for bga in self.__bgAnims:
             bga.start()
-        self.__activateIdleTimer()
+        self.__startIdleDemo()
 
     def _leave(self):
         self.__ctrlDiv.sensitive = False
