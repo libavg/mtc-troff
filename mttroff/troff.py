@@ -411,7 +411,7 @@ class AboutPlayer(avg.DivNode):
         scale = aboutData['size'] * g_gridSize
 
         self.__textNode = avg.WordsNode(parent=self, text=aboutData['text'], color=color,
-                font='Millennium', fontsize=scale, alignment='center', opacity=0)
+                font='Ubuntu', fontsize=scale, alignment='center', opacity=0)
         self.size = self.__textNode.size + Point2D(4, 1) * g_gridSize
         self.size = (ceil(self.width / g_gridSize) * g_gridSize,
                 ceil(self.height / g_gridSize) * g_gridSize)
