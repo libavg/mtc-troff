@@ -19,7 +19,7 @@
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
 from os import path
-from libavg.AVGAppUtil import getMediaDir, createImagePreviewNode
+from libavg.utils import getMediaDir, createImagePreviewNode
 from troff import TROff
 
 __all__ = [ 'apps', 'TROff']
