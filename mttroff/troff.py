@@ -109,9 +109,10 @@ class Button(object):
 
 
 class Controller(avg.DivNode):
-    def __init__(self, player, joinCallback, *args, **kwargs):
+    def __init__(self, player, joinCallback, parent=None, *args, **kwargs):
         kwargs['pivot'] = (0, 0)
         super(Controller, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         self.__player = player
         self.__joinCallback = joinCallback
@@ -157,13 +158,14 @@ class Controller(avg.DivNode):
 
 
 class WinCounter(avg.DivNode):
-    def __init__(self, color, *args, **kwargs):
+    def __init__(self, color, parent=None, *args, **kwargs):
         def triangle(p0, p1, p2):
             avg.PolygonNode(parent=self, pos=[p0, p1, p2], color=color, fillcolor=color)
 
-        kwargs['pos'] = kwargs['parent'].size / 2 + Point2D(g_gridSize, g_gridSize)
+        kwargs['pos'] = parent.size / 2 + Point2D(g_gridSize, g_gridSize)
         kwargs['pivot'] = (-g_gridSize, -g_gridSize)
         super(WinCounter, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         self.__count = 0
 
@@ -200,10 +202,11 @@ class WinCounter(avg.DivNode):
 
 
 class Player(avg.DivNode):
-    def __init__(self, color, startPos, startHeading, *args, **kwargs):
+    def __init__(self, color, startPos, startHeading, parent=None, *args, **kwargs):
         kwargs['opacity'] = 0
         kwargs['sensitive'] = False
         super(Player, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         self._color = color
         self.__startPos = Point2D(startPos)
@@ -403,9 +406,10 @@ class IdlePlayer(Player):
 
 
 class AboutPlayer(avg.DivNode):
-    def __init__(self, aboutData, *args, **kwargs):
+    def __init__(self, aboutData, parent=None, *args, **kwargs):
         kwargs['sensitive'] = False
         super(AboutPlayer, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         color = PLAYER_COLORS[aboutData['colorIdx']]
         scale = aboutData['size'] * g_gridSize
@@ -438,11 +442,12 @@ class AboutPlayer(avg.DivNode):
 
 
 class DragItem(avg.DivNode):
-    def __init__(self, iconNode, *args, **kwargs):
+    def __init__(self, iconNode, parent=None, *args, **kwargs):
         self._posOffset = Point2D(g_gridSize * 8, g_gridSize * 8)
-        w, h = kwargs['parent'].size
+        w, h = parent.size
         kwargs['size'] = self._posOffset * 2
         super(DragItem, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         self.__minPosX = int(-self._posOffset.x) + g_gridSize
         self.__maxPosX = int(w - self._posOffset.x)
@@ -548,12 +553,13 @@ class Blocker(DragItem):
 
 
 class BgAnim(avg.DivNode):
-    def __init__(self, *args, **kwargs):
-        size = kwargs['parent'].size
+    def __init__(self, parent=None, *args, **kwargs):
+        size = parent.size
         self.__maxX, self.__maxY = size
         kwargs['pos'] = (int(size.x / 2), int(size.y / 2))
         kwargs['opacity'] = 0.2
         super(BgAnim, self).__init__(*args, **kwargs)
+        self.registerInstance(self, parent)
 
         avg.LineNode(parent=self, pos1=(-self.__maxX, 0), pos2=(self.__maxX, 0))
         avg.LineNode(parent=self, pos1=(0, -self.__maxY), pos2=(0, self.__maxY))
