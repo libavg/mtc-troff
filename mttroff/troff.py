@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
-from libavg import avg, gameapp, Point2D
+from libavg import avg, gameapp, Point2D, player
 from libavg.utils import getMediaDir
 from math import floor, ceil, pi
 from random import choice, randint
@@ -30,12 +30,7 @@ BASE_BORDERWIDTH = 10
 IDLE_TIMEOUT = 10000
 PLAYER_COLORS = ['00FF00', 'FF00FF', '00FFFF', 'FFFF00']
 
-g_player = avg.Player.get()
 g_gridSize = 4
-
-
-#def logMsg(msg):
-#    print '[%s] %s' %(g_player.getFrameTime(), msg)
 
 
 class Button(object):
@@ -44,9 +39,11 @@ class Button(object):
         if icon == '^': # 'clear player wins' button
             self.__node = avg.PolygonNode(pos=[(w, h), (0, h), (0, 0)])
         elif icon == '<': # 'turn left' button
-            self.__node = avg.PolygonNode(pos=[(g_gridSize, 0), (w, 0), (w, h - g_gridSize)])
+            self.__node = avg.PolygonNode(pos=[(g_gridSize, 0), (w, 0), 
+                    (w, h - g_gridSize)])
         elif icon == '>': # 'turn right' button
-            self.__node = avg.PolygonNode(pos=[(w - g_gridSize, h), (0, h), (0, g_gridSize)])
+            self.__node = avg.PolygonNode(pos=[(w - g_gridSize, h), (0, h), 
+                    (0, g_gridSize)])
         elif icon == '#': # 'clear all player wins' button
             # WinCounter size + some offset
             size = Point2D(g_gridSize * 44, g_gridSize * 44)
@@ -72,8 +69,8 @@ class Button(object):
 
         self.__cursorID = None
         self.__callback = callback
-        self.__node.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH, self.__onDown)
-        self.__node.setEventHandler(avg.CURSORUP, avg.MOUSE | avg.TOUCH, self.__onUp)
+        self.__node.subscribe(avg.Node.CURSOR_DOWN, self.__onDown)
+        self.__node.subscribe(avg.Node.CURSOR_UP, self.__onUp)
 
     def activate(self):
         self.__node.fillopacity = 0.2 # needs libavg-r4503 bugfix to avoid crash
@@ -182,7 +179,8 @@ class WinCounter(avg.DivNode):
         triangle((s12, s12), (s34, s34), (s12, s1))
         triangle((s12, s1), (s34, s34), (s1, s1))
 
-        resetButton = Button(self, color, '^', lambda: self.reset(True)).activate()
+        self.__resetButton = Button(self, color, '^', lambda: self.reset(True))
+        self.__resetButton.activate()
         self.__clearSound = avg.SoundNode(parent=self, href='clear.wav')
 
     @property
@@ -386,9 +384,9 @@ class IdlePlayer(Player):
             super(IdlePlayer, self)._setDead(restart)
             self.__isRunning = False
         elif not self.__respawnTimoutID is None:
-            g_player.clearInterval(self.__respawnTimoutID)
+            player.clearInterval(self.__respawnTimoutID)
         if restart:
-            self.__respawnTimoutID = g_player.setTimeout(randint(600, 1200), self.setReady)
+            self.__respawnTimoutID = player.setTimeout(randint(600, 1200), self.setReady)
 
     def step(self):
         if not self.__isRunning:
@@ -461,9 +459,9 @@ class DragItem(avg.DivNode):
         self.appendChild(self.__node)
 
         self.__cursorID = None
-        self.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH, self._onDown)
-        self.setEventHandler(avg.CURSORUP, avg.MOUSE | avg.TOUCH, self.__onUp)
-        self.setEventHandler(avg.CURSORMOTION, avg.MOUSE | avg.TOUCH, self.__onMotion)
+        self.subscribe(avg.Node.CURSOR_DOWN, self._onDown)
+        self.subscribe(avg.Node.CURSOR_UP, self.__onUp)
+        self.subscribe(avg.Node.CURSOR_MOTION, self.__onMotion)
 
     def activate(self):
         self.__active = True
@@ -568,16 +566,12 @@ class BgAnim(avg.DivNode):
         if self.__heading.x == 0:
             self.__heading.y = choice([-1, 1])
         self.__headingCountdown = randint(60, 120)
-        self.__onFrameHandlerID = None
 
     def start(self):
-        assert self.__onFrameHandlerID is None
-        self.__onFrameHandlerID = g_player.setOnFrameHandler(self.__onFrame)
+        player.subscribe(player.ON_FRAME, self.__onFrame)
 
     def stop(self):
-        assert self.__onFrameHandlerID is not None
-        g_player.clearInterval(self.__onFrameHandlerID)
-        self.__onFrameHandlerID = None
+        player.unsubscribe(player.ON_FRAME, self.__onFrame)
 
     def __onFrame(self):
         if self.__headingCountdown == 0:
@@ -601,7 +595,7 @@ class BgAnim(avg.DivNode):
 class TROff(gameapp.GameApp):
     def init(self):
         global g_gridSize
-        screenSize = g_player.getRootNode().size
+        screenSize = player.getRootNode().size
         g_gridSize = int(min(floor(screenSize.x / BASE_GRIDSIZE.x),
                 floor(screenSize.y / BASE_GRIDSIZE.y)))
         borderWidth = g_gridSize * BASE_BORDERWIDTH
@@ -671,15 +665,17 @@ class TROff(gameapp.GameApp):
                 pos=self.__ctrlDiv.size / 2, r=self.__ctrlDiv.size.y / 4,
                 opacity=0, sensitive=False)
 
-        exitCallback = self.quit
-        Button(self.__winsDiv, 'FF0000', 'xl', exitCallback).activate()
-        Button(self.__winsDiv, 'FF0000', 'xr', exitCallback).activate()
+        self.__leftQuitButton = Button(self.__winsDiv, 'FF0000', 'xl', self.quit)
+        self.__leftQuitButton.activate()
+        self.__rightQuitButton = Button(self.__winsDiv, 'FF0000', 'xr', self.quit)
+        self.__rightQuitButton.activate()
 
         self.__redSound = avg.SoundNode(parent=battleground, href='red.wav')
         self.__yellowSound = avg.SoundNode(parent=battleground, href='yellow.wav')
         self.__greenSound = avg.SoundNode(parent=battleground, href='green.wav')
         self.__startSound = avg.SoundNode(parent=battleground, href='start.wav')
 
+        self.__downHandlerID = None
         self.__preStart()
 
     def joinPlayer(self, player):
@@ -720,7 +716,7 @@ class TROff(gameapp.GameApp):
             avg.LinearAnim(self.__countdownNode, 'fillopacity', 1000, 1, 0).start()
             for c in self.__controllers:
                 c.start()
-            self.__onFrameHandlerID = g_player.setOnFrameHandler(self.__onGameFrame)
+            player.subscribe(player.ON_FRAME, self.__onGameFrame)
         def goYellow():
             self.__yellowSound.play()
             self.__countdownNode.fillcolor = 'FFFF00'
@@ -752,10 +748,10 @@ class TROff(gameapp.GameApp):
             else:
                 self.__preStart()
 
-        g_player.clearInterval(self.__onFrameHandlerID)
+        player.unsubscribe(player.ON_FRAME, self.__onGameFrame)
         self.__shield.deactivate()
         self.__blocker.deactivate()
-        g_player.setTimeout(2000, restart)
+        player.setTimeout(2000, restart)
 
     def __clearWins(self):
         self.__startSound.play()
@@ -811,20 +807,21 @@ class TROff(gameapp.GameApp):
 
     def __activateIdleTimer(self):
         assert self.__idleTimeoutID is None
-        self.__idleTimeoutID = g_player.setTimeout(IDLE_TIMEOUT, self.__startIdleDemo)
-        self.__ctrlDiv.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH,
+        self.__idleTimeoutID = player.setTimeout(IDLE_TIMEOUT, self.__startIdleDemo)
+        self.__downHandlerID = self.__ctrlDiv.subscribe(avg.Node.CURSOR_DOWN,
                 lambda e:self.__restartIdleTimer())
 
     def __deactivateIdleTimer(self):
         assert self.__idleTimeoutID is not None
-        g_player.clearInterval(self.__idleTimeoutID)
+        player.clearInterval(self.__idleTimeoutID)
         self.__idleTimeoutID = None
-        self.__ctrlDiv.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH, None)
+        if self.__downHandlerID is not None:
+            self.__ctrlDiv.unsubscribe(self.__downHandlerID)
 
     def __restartIdleTimer(self):
         if not self.__idleTimeoutID is None:
-            g_player.clearInterval(self.__idleTimeoutID)
-        self.__idleTimeoutID = g_player.setTimeout(IDLE_TIMEOUT, self.__startIdleDemo)
+            player.clearInterval(self.__idleTimeoutID)
+        self.__idleTimeoutID = player.setTimeout(IDLE_TIMEOUT, self.__startIdleDemo)
 
     def __startIdleDemo(self):
         self.__idleTimeoutID = None
@@ -832,13 +829,13 @@ class TROff(gameapp.GameApp):
         self.__ctrlDiv.sensitive = False
         for p in self.__idlePlayers:
             p.setReady()
-        self.__gameDiv.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH,
+        self.__demoDownHandlerID = self.__gameDiv.subscribe(avg.Node.CURSOR_DOWN,
                 lambda e:self.__stopIdleDemo())
-        self.__onFrameHandlerID = g_player.setOnFrameHandler(self.__onIdleFrame)
+        player.subscribe(player.ON_FRAME, self.__onIdleFrame)
 
     def __stopIdleDemo(self):
-        self.__gameDiv.setEventHandler(avg.CURSORDOWN, avg.MOUSE | avg.TOUCH, None)
-        g_player.clearInterval(self.__onFrameHandlerID)
+        self.__gameDiv.unsubscribe(self.__demoDownHandlerID)
+        player.unsubscribe(player.ON_FRAME, self.__onIdleFrame)
         avg.fadeIn(self.__gameDiv, 200)
         self.__ctrlDiv.sensitive = True
         for p in self.__idlePlayers:
