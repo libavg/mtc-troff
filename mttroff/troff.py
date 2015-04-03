@@ -683,6 +683,8 @@ class TROff(app.MainDiv):
         self.__ctrlDiv.sensitive = True
         for bga in self.__bgAnims:
             bga.start()
+
+        self.__setupMultitouch()
         self.__startIdleDemo()
 
     def joinPlayer(self, player):
@@ -840,6 +842,25 @@ class TROff(app.MainDiv):
         for p in self.__idlePlayers:
             p.step()
 
+    def __setupMultitouch(self):
+        if app.instance.settings.getBoolean('multitouch_enabled'):
+            return
+
+        import platform
+        import os
+
+        if platform.system() == 'Linux':
+            os.putenv('AVG_MULTITOUCH_DRIVER', 'XINPUT')
+        elif platform.system() == 'Windows':
+            os.putenv('AVG_MULTITOUCH_DRIVER', 'WIN7TOUCH')
+        else:
+            os.putenv('AVG_MULTITOUCH_DRIVER', 'TUIO')
+
+        try:
+            player.enableMultitouch()
+        except Exception, e:
+            os.putenv('AVG_MULTITOUCH_DRIVER', 'TUIO')
+            player.enableMultitouch()
 
 if __name__ == '__main__':
     app.App().run(TROff())
