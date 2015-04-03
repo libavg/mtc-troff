@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
-from libavg import avg, gameapp, Point2D, player
+from libavg import avg, Point2D, player, app, utils
 from libavg.utils import getMediaDir
 from math import floor, ceil, pi
 from random import choice, randint
@@ -592,9 +592,10 @@ class BgAnim(avg.DivNode):
             self.pos += self.__heading
 
 
-class TROff(gameapp.GameApp):
-    def init(self):
+class TROff(app.MainDiv):
+    def onInit(self):
         global g_gridSize
+        self.mediadir = utils.getMediaDir(__file__)
         screenSize = player.getRootNode().size
         g_gridSize = int(min(floor(screenSize.x / BASE_GRIDSIZE.x),
                 floor(screenSize.y / BASE_GRIDSIZE.y)))
@@ -604,13 +605,13 @@ class TROff(gameapp.GameApp):
                 floor((screenSize.y - borderWidth * 2) / g_gridSize) * g_gridSize)
         borderWidth = (screenSize - battlegroundSize) / 2.0
 
-        avg.RectNode(parent=self._parentNode, size=screenSize,
+        avg.RectNode(parent=self, size=screenSize,
                 opacity=0, fillcolor='B00000', fillopacity=1)
-        avg.RectNode(parent=self._parentNode,
+        avg.RectNode(parent=self,
                 pos=borderWidth, size=battlegroundSize,
                 opacity=0, fillcolor='000000', fillopacity=1)
 
-        battleground = avg.DivNode(parent=self._parentNode,
+        battleground = avg.DivNode(parent=self,
                 pos=borderWidth, size=battlegroundSize, crop=True)
 
         self.__bgAnims = []
@@ -665,9 +666,9 @@ class TROff(gameapp.GameApp):
                 pos=self.__ctrlDiv.size / 2, r=self.__ctrlDiv.size.y / 4,
                 opacity=0, sensitive=False)
 
-        self.__leftQuitButton = Button(self.__winsDiv, 'FF0000', 'xl', self.quit)
+        self.__leftQuitButton = Button(self.__winsDiv, 'FF0000', 'xl', player.stop)
         self.__leftQuitButton.activate()
-        self.__rightQuitButton = Button(self.__winsDiv, 'FF0000', 'xr', self.quit)
+        self.__rightQuitButton = Button(self.__winsDiv, 'FF0000', 'xr', player.stop)
         self.__rightQuitButton.activate()
 
         self.__redSound = avg.SoundNode(parent=battleground, href='red.wav')
@@ -677,6 +678,12 @@ class TROff(gameapp.GameApp):
 
         self.__downHandlerID = None
         self.__preStart()
+
+        self.__startSound.play()
+        self.__ctrlDiv.sensitive = True
+        for bga in self.__bgAnims:
+            bga.start()
+        self.__startIdleDemo()
 
     def joinPlayer(self, player):
         self.__activePlayers.append(player)
@@ -688,19 +695,6 @@ class TROff(gameapp.GameApp):
 
     def _getPackagePath(self):
         return __file__
-
-    def _enter(self):
-        self.__startSound.play()
-        self.__ctrlDiv.sensitive = True
-        for bga in self.__bgAnims:
-            bga.start()
-        self.__startIdleDemo()
-
-    def _leave(self):
-        self.__ctrlDiv.sensitive = False
-        for bga in self.__bgAnims:
-            bga.stop()
-        self.__deactivateIdleTimer()
 
     def __preStart(self, clearWins=False):
         self.__activePlayers = []
@@ -848,4 +842,4 @@ class TROff(gameapp.GameApp):
 
 
 if __name__ == '__main__':
-    TROff.start()
+    app.App().run(TROff())

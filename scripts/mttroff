@@ -19,6 +19,7 @@
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import libavg
 
 try:
     import mttroff
@@ -32,4 +33,4 @@ except ImportError:
         sys.exit(1)
 
 if __name__ == '__main__':
-    mttroff.TROff.start()
+    libavg.app.App().run(mttroff.TROff(), app_resolution='', app_fullscreen='true')
