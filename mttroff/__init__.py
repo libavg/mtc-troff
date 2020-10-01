@@ -18,17 +18,4 @@
 # You should have received a copy of the GNU General Public License
 # along with TROff. If not, see <http://www.gnu.org/licenses/>.
 
-from os import path
-from libavg.utils import getMediaDir, createImagePreviewNode
 from troff import TROff
-
-__all__ = [ 'apps', 'TROff']
-
-def createPreviewNode(maxSize):
-    filename = path.join(getMediaDir(__file__), 'preview.png')
-    return createImagePreviewNode(maxSize, absHref = filename)
-
-apps = (
-        {'class': TROff,
-            'createPreviewNode': createPreviewNode},
-        )
