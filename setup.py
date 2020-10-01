@@ -13,6 +13,6 @@ setup(
     packages=['mttroff'],
     scripts=['scripts/mttroff'],
     package_data={
-            'mttroff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Millennium.ttf']
+            'mttroff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Ubuntu-R.ttf']
     }
 )
