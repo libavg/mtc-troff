@@ -73,8 +73,8 @@ class Button(object):
         self.__node.subscribe(avg.Node.CURSOR_UP, self.__onUp)
 
     def activate(self):
-        self.__node.fillopacity = 0.2 # needs libavg-r4503 bugfix to avoid crash
-        avg.fadeIn(self.__node, 200, 0.5)
+        self.__node.fillopacity = 0.2
+        avg.Anim.fadeIn(self.__node, 200, 0.5)
         self.__node.sensitive = True
 
     def deactivate(self):
@@ -85,24 +85,24 @@ class Button(object):
             self.__node.releaseEventCapture(self.__cursorID)
             self.__cursorID = None
         self.__node.sensitive = False
-        avg.fadeOut(self.__node, 200, hideFill)
+        avg.Anim.fadeOut(self.__node, 200, hideFill)
 
     def __onDown(self, event):
         if not self.__cursorID is None:
-            return False
+            return
         self.__cursorID = event.cursorid
         self.__node.setEventCapture(self.__cursorID)
 
-        avg.LinearAnim(self.__node, 'fillopacity', 200, 1, 0.2).start() # libavg-r4503
+        avg.LinearAnim(self.__node, 'fillopacity', 200, 1, 0.2).start()
         self.__callback()
-        return False # dispatch event further (for idle timer reset)
+        return
 
     def __onUp(self, event):
         if not self.__cursorID == event.cursorid:
-            return False
+            return
         self.__node.releaseEventCapture(self.__cursorID)
         self.__cursorID = None
-        return True # stop event propagation
+        return
 
 
 class Controller(avg.DivNode):
@@ -235,7 +235,7 @@ class Player(avg.DivNode):
         self.__body.strokewidth = 1
         self.__body.opacity = 1
         self.__nodeAnim.start()
-        avg.fadeIn(self, 200)
+        avg.Anim.fadeIn(self, 200)
         self.__createLine()
 
     def _setDead(self, explode):
@@ -274,7 +274,7 @@ class Player(avg.DivNode):
                 l.unlink()
             self._lines = []
 
-        avg.fadeOut(self, 200, removeLines)
+        avg.Anim.fadeOut(self, 200, removeLines)
 
 
 class RealPlayer(Player):
@@ -428,12 +428,12 @@ class AboutPlayer(avg.DivNode):
         self.__idlePlayer = IdlePlayer(aboutData, parent=self)
 
     def setReady(self):
-        avg.fadeIn(self.__textNode, 200)
+        avg.Anim.fadeIn(self.__textNode, 200)
         self.__idlePlayer.setReady()
 
     def setDead(self, restart=False):
         self.__idlePlayer.setDead()
-        avg.fadeOut(self.__textNode, 200)
+        avg.Anim.fadeOut(self.__textNode, 200)
 
     def step(self):
         self.__idlePlayer.step()
@@ -489,28 +489,28 @@ class DragItem(avg.DivNode):
 
     def _onDown(self, event):
         if not self.__cursorID is None:
-            return False
+            return
         self.__cursorID = event.cursorid
         self.setEventCapture(self.__cursorID)
         self.__dragOffset = event.pos - self.pos
-        return True
+        return
 
     def __onUp(self, event):
         if not self.__cursorID == event.cursorid:
-            return False
+            return
         self.releaseEventCapture(self.__cursorID)
         self.__cursorID = None
-        return True
+        return
 
     def __onMotion(self, event):
         if not self.__cursorID == event.cursorid:
-            return False
+            return
         pos = (event.pos - self.__dragOffset) / g_gridSize
         pos = Point2D(round(pos.x), round(pos.y)) * g_gridSize
         if self.__minPosX <= pos.x and pos.x < self.__maxPosX \
                 and self.__minPosY <= pos.y and pos.y < self.__maxPosY:
             self.pos = pos
-        return True
+        return
 
 
 class Shield(DragItem):
@@ -537,7 +537,7 @@ class Shield(DragItem):
 
     def _onDown(self, event):
         if self.__isGrabbed:
-            return False
+            return
         return super(Shield, self)._onDown(event)
 
 
@@ -684,13 +684,12 @@ class TROff(app.MainDiv):
         for bga in self.__bgAnims:
             bga.start()
 
-        self.__setupMultitouch()
         self.__startIdleDemo()
 
     def joinPlayer(self, player):
         self.__activePlayers.append(player)
         if len(self.__activePlayers) == 1:
-            avg.fadeOut(self.__winsDiv, 200)
+            avg.Anim.fadeOut(self.__winsDiv, 200)
             self.__winsDiv.sensitive = False
         elif len(self.__activePlayers) == 2:
             self.__startButton.activate()
@@ -736,7 +735,7 @@ class TROff(app.MainDiv):
         def restart():
             for p in self.__activePlayers:
                 p.setDead(False)
-            avg.fadeIn(self.__winsDiv, 200)
+            avg.Anim.fadeIn(self.__winsDiv, 200)
             self.__winsDiv.sensitive = True
             self.__activateIdleTimer()
             if forceClearWins:
@@ -821,7 +820,7 @@ class TROff(app.MainDiv):
 
     def __startIdleDemo(self):
         self.__idleTimeoutID = None
-        avg.fadeOut(self.__gameDiv, 200)
+        avg.Anim.fadeOut(self.__gameDiv, 200)
         self.__ctrlDiv.sensitive = False
         for p in self.__idlePlayers:
             p.setReady()
@@ -832,7 +831,7 @@ class TROff(app.MainDiv):
     def __stopIdleDemo(self):
         self.__gameDiv.unsubscribe(self.__demoDownHandlerID)
         player.unsubscribe(player.ON_FRAME, self.__onIdleFrame)
-        avg.fadeIn(self.__gameDiv, 200)
+        avg.Anim.fadeIn(self.__gameDiv, 200)
         self.__ctrlDiv.sensitive = True
         for p in self.__idlePlayers:
             p.setDead()
@@ -842,25 +841,6 @@ class TROff(app.MainDiv):
         for p in self.__idlePlayers:
             p.step()
 
-    def __setupMultitouch(self):
-        if app.instance.settings.getBoolean('multitouch_enabled'):
-            return
-
-        import platform
-        import os
-
-        if platform.system() == 'Linux':
-            os.putenv('AVG_MULTITOUCH_DRIVER', 'XINPUT')
-        elif platform.system() == 'Windows':
-            os.putenv('AVG_MULTITOUCH_DRIVER', 'WIN7TOUCH')
-        else:
-            os.putenv('AVG_MULTITOUCH_DRIVER', 'TUIO')
-
-        try:
-            player.enableMultitouch()
-        except Exception, e:
-            os.putenv('AVG_MULTITOUCH_DRIVER', 'TUIO')
-            player.enableMultitouch()
 
 if __name__ == '__main__':
     app.App().run(TROff())
