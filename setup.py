@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='TROff',
@@ -13,6 +13,6 @@ setup(
     packages=['mttroff'],
     scripts=['scripts/mttroff'],
     package_data={
-            'mttroff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Ubuntu-R.ttf']
+        'mttroff': ['media/preview.png', 'media/*.wav', 'data/*.pickle', 'fonts/Ubuntu-R.ttf']
     }
 )
