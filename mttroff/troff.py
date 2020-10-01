@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
+
 # TROff - A Multitouch TRON Clone
 #
-# Copyright (C) 2011 Thomas Schott, <scotty at c-base dot org>
+# Copyright (C) 2011-2020 Thomas Schott, <scotty at c-base dot org>
 #
 # TROff is free software: You can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -39,10 +39,10 @@ class Button(object):
         if icon == '^': # 'clear player wins' button
             self.__node = avg.PolygonNode(pos=[(w, h), (0, h), (0, 0)])
         elif icon == '<': # 'turn left' button
-            self.__node = avg.PolygonNode(pos=[(g_gridSize, 0), (w, 0), 
+            self.__node = avg.PolygonNode(pos=[(g_gridSize, 0), (w, 0),
                     (w, h - g_gridSize)])
         elif icon == '>': # 'turn right' button
-            self.__node = avg.PolygonNode(pos=[(w - g_gridSize, h), (0, h), 
+            self.__node = avg.PolygonNode(pos=[(w - g_gridSize, h), (0, h),
                     (0, g_gridSize)])
         elif icon == '#': # 'clear all player wins' button
             # WinCounter size + some offset
@@ -60,7 +60,7 @@ class Button(object):
             if icon == 'O': # 'start' button
                 self.__node = avg.CircleNode(pos=parent.size / 2, r=h / 4,
                         strokewidth=2)
-            else: # icon == 'o': 'join' button 
+            else: # icon == 'o': 'join' button
                 self.__node = avg.CircleNode(pos=parent.size / 2, r=h / 2)
         self.__node.color = color
         self.__node.opacity = 0
